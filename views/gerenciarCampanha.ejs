@@ -49,7 +49,7 @@
                 </div>
                 <form action="/campanhas/<%= campanha.id %>/remover-personagem" method="POST" class="form-inline">
                   <input type="hidden" name="id_personagem" value="<%= p.id %>">
-                  <button class="btn-seta" style="padding:2px 8px;">🗑️ Desatribuir</button>
+                  <button class="btn-seta" style="padding:2px 8px;">🗑️ Desatribuir</button> <a href="/campanhas/<%= campanha.id %>/personagens/<%= p.id %>/visualizar" class="btn-seta">👁️ Ver Ficha</a>
                 </form>
               </div>
             <% }); %>
@@ -68,13 +68,84 @@
                 <option value="<%= p.id %>"><%= p.nome %></option>
               <% }); %>
             </select>
-            <button class="btn-seta">➕ Atribuir</button>
+            <button class="btn-seta">➕ Atribuir</button> 
           </form>
         <% } %>
       </div>
     <% }); %>
   <% } %>
+<div class="tabs">
+  <button class="tab-btn ativo" data-tab="jogadores">👥 Jogadores</button>
+  <button class="tab-btn" data-tab="logs">📜 Logs</button>
 </div>
+
+<div id="tab-jogadores" class="tab-conteudo">
+  <!-- Todo o conteúdo existente de jogadores e personagens -->
+</div>
+
+<div id="tab-logs" class="tab-conteudo" style="display: none;">
+  <h3>Registro de Ações dos Jogadores</h3>
+  <% if (logs.length === 0) { %>
+    <p>Nenhuma ação registrada ainda.</p>
+  <% } else { %>
+    <div class="logs-lista" style="max-height: 500px; overflow-y: auto; background: #0a0a0a; border: 1px solid #00ff9c; padding: 10px;">
+      <% logs.forEach(log => { %>
+        <div style="border-bottom: 1px solid #00ff9c55; padding: 8px;">
+          <small><%= new Date(log.data_hora).toLocaleString() %></small><br>
+          <strong><%= log.jogador_nome %></strong> (<%= log.personagem_nome %>) - 
+          <span style="color: #00ffaa;"><%= log.acao %></span>: 
+          <%= log.nome_acao %><br>
+          <span style="font-family: monospace; font-size: 12px;"><%= log.detalhes %></span>
+          <% if (log.resultado !== null) { %>
+            <span style="float: right; font-weight: bold;">Total: <%= log.resultado %></span>
+          <% } %>
+        </div>
+      <% }) %>
+    </div>
+  <% } %>
+</div>
+
+<script>
+  // Lógica das abas
+  const tabs = document.querySelectorAll('.tab-btn');
+  const conteudos = {
+    jogadores: document.getElementById('tab-jogadores'),
+    logs: document.getElementById('tab-logs')
+  };
+
+  tabs.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const tabId = btn.getAttribute('data-tab');
+      // remove ativo de todos
+      tabs.forEach(b => b.classList.remove('ativo'));
+      btn.classList.add('ativo');
+      // esconde todos os conteúdos
+      Object.values(conteudos).forEach(div => div.style.display = 'none');
+      // mostra o selecionado
+      if (conteudos[tabId]) conteudos[tabId].style.display = 'block';
+    });
+  });
+</script>
+
+<style>
+  .tab-conteudo {
+    margin-top: 20px;
+  }
+  .logs-lista::-webkit-scrollbar {
+    width: 8px;
+  }
+  .logs-lista::-webkit-scrollbar-track {
+    background: #1a1a1a;
+  }
+  .logs-lista::-webkit-scrollbar-thumb {
+    background: #00ff9c;
+    border-radius: 0;
+  }
+</style>
+  
+</div>
+
+
 
 <script>
   // Busca de jogadores via AJAX

@@ -1,5 +1,7 @@
 const PersonagemModel = require("../models/personagemModel");
-const HabilidadeModel = require("../models/HabilidadeModel");
+const HabilidadeModel = require("../models/habilidadeModel");
+const { registrarLogCampanha } = require("../utils/logger");
+const CampanhaModel = require("../models/CampanhaModel");
 const { calcularPontosAtributoTotais, calcularPontosGastos, calcularDano } = require("../utils/rpgHelpers");
 
 async function listar(req, res) {
@@ -416,9 +418,17 @@ async function rolarAtributo(req, res) {
     const resultado = rollD20(valorAtributo);
     const formatado = formatRollResult(resultado, 'd20');
     
-    // Salva no log (opcional - você pode criar uma tabela de logs)
     console.log(`[ROLL] ${personagem.nome} rolou ${atributo}: ${formatado.total}`);
-    
+    const id_campanha = await CampanhaModel.getCampanhaAtivaDoPersonagem(id);
+await registrarLogCampanha(
+  id_campanha,
+  req.session.userId,
+  id,
+  'atributo',
+  atributo,
+  `${atributo.toUpperCase()}: ${resultado.roll} + ${resultado.modifier} = ${resultado.total}`,
+  resultado.total
+);
     res.json({
       ok: true,
       tipo: 'atributo',
@@ -449,7 +459,17 @@ async function rolarHabilidade(req, res) {
     const formatado = formatRollResult(resultado, 'dice');
     
     console.log(`[ROLL] ${personagem.nome} usou ${habilidade.nome}: ${formatado.total} ${habilidade.tipo === 'cura' ? 'cura' : 'dano'}`);
-    
+    const id_campanha = await CampanhaModel.getCampanhaAtivaDoPersonagem(id);
+await registrarLogCampanha(
+  id_campanha,
+  req.session.userId,
+  id,
+  'atributo',
+  atributo,
+  `${atributo.toUpperCase()}: ${resultado.roll} + ${resultado.modifier} = ${resultado.total}`,
+  resultado.total
+);
+
     res.json({
       ok: true,
       tipo: 'habilidade',
@@ -466,8 +486,110 @@ async function rolarHabilidade(req, res) {
     res.status(500).json({ erro: "Erro ao rolar dano da habilidade" });
   }
 }
+async function editarAtributo(req, res) {
+  const { id, atributo } = req.params;
+  let { novo_valor } = req.body;
+  novo_valor = parseInt(novo_valor);
 
+  const tiposPermitidos = ["forca", "agilidade", "constituicao", "intelecto", "atencao", "estabilidade"];
+  if (!tiposPermitidos.includes(atributo)) {
+    return res.status(400).json({ erro: "Atributo inválido" });
+  }
 
+  try {
+    const personagem = await PersonagemModel.findByIdAndJogador(id, req.session.userId);
+    if (!personagem) return res.status(404).json({ erro: "Personagem não encontrado" });
+
+    const nivel = Number(personagem.nivel);
+    const pontosTotaisAtributo = 21 + (nivel - 1) * 2;
+
+    // Clona os atributos atuais e aplica o novo valor
+    let novosAtributos = {
+      forca: Number(personagem.forca),
+      agilidade: Number(personagem.agilidade),
+      constituicao: Number(personagem.constituicao),
+      intelecto: Number(personagem.intelecto),
+      atencao: Number(personagem.atencao),
+      estabilidade: Number(personagem.estabilidade)
+    };
+    if (novo_valor < 1) return res.status(400).json({ erro: "Valor mínimo é 1" });
+    novosAtributos[atributo] = novo_valor;
+
+    // Calcula gasto total
+    const gasto = (novosAtributos.forca - 1) + (novosAtributos.agilidade - 1) + (novosAtributos.constituicao - 1) +
+                  (novosAtributos.intelecto - 1) + (novosAtributos.atencao - 1) + (novosAtributos.estabilidade - 1);
+    if (gasto > pontosTotaisAtributo) {
+      return res.status(400).json({ erro: `Pontos insuficientes. Máximo: ${pontosTotaisAtributo}` });
+    }
+
+    // Atualiza o atributo no banco
+    await PersonagemModel.update(id, { [atributo]: novo_valor });
+
+    // Busca personagem atualizado
+    const pAtualizado = await PersonagemModel.findByIdAndJogador(id, req.session.userId);
+
+    // Recalcula vida máxima e vida atual
+    let vida_max = 10 + Number(pAtualizado.constituicao) + Number(pAtualizado.forca) + (Number(pAtualizado.nivel) * 6);
+    if (pAtualizado.vida_max_custom && pAtualizado.vida_max_custom > 0) vida_max = pAtualizado.vida_max_custom;
+    let nova_vida = Math.min(Number(pAtualizado.vida_atual), vida_max);
+    await PersonagemModel.update(id, { vida_atual: nova_vida });
+
+    // Recalcula sanidade máxima e sanidade atual
+    let sanidade_max = 5 + Number(pAtualizado.estabilidade) + (Number(pAtualizado.nivel) * 3);
+    if (pAtualizado.sanidade_max_custom && pAtualizado.sanidade_max_custom > 0) sanidade_max = pAtualizado.sanidade_max_custom;
+    let nova_sanidade = Math.min(Number(pAtualizado.sanidade_atual), sanidade_max);
+    await PersonagemModel.update(id, { sanidade_atual: nova_sanidade });
+
+    // Pontos disponíveis atualizados
+    const gastosAtualizados = (Number(pAtualizado.forca)-1)+(Number(pAtualizado.agilidade)-1)+(Number(pAtualizado.constituicao)-1)+
+                              (Number(pAtualizado.intelecto)-1)+(Number(pAtualizado.atencao)-1)+(Number(pAtualizado.estabilidade)-1);
+    const pontosDisponiveis = pontosTotaisAtributo - gastosAtualizados;
+
+    res.json({
+      ok: true,
+      novo_valor: novo_valor,
+      pontos_disponiveis: pontosDisponiveis,
+      vida_atual: nova_vida,
+      vida_max: vida_max,
+      sanidade_atual: nova_sanidade,
+      sanidade_max: sanidade_max
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ erro: "Erro interno" });
+  }
+}
+const fs = require('fs');
+const path = require('path');
+
+async function atualizarImagem(req, res) {
+  try {
+    const id = req.params.id;
+    const personagem = await PersonagemModel.findByIdAndJogador(id, req.session.userId);
+    if (!personagem) return res.status(404).json({ erro: "Personagem não encontrado" });
+
+    // Se não veio arquivo
+    if (!req.file) {
+      return res.status(400).json({ erro: "Nenhuma imagem enviada" });
+    }
+
+    // Remove imagem antiga (se existir e não for a padrão)
+    if (personagem.imagem) {
+      const oldPath = path.join(__dirname, '..', 'public', 'uploads', personagem.imagem);
+      if (fs.existsSync(oldPath)) {
+        fs.unlinkSync(oldPath);
+      }
+    }
+
+    // Atualiza o nome do arquivo no banco
+    await PersonagemModel.update(id, { imagem: req.file.filename });
+
+    res.json({ ok: true, imagem: req.file.filename });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ erro: "Erro ao atualizar imagem" });
+  }
+}
 module.exports = {
   listar,
   mostrarFormNovo,
@@ -486,5 +608,8 @@ module.exports = {
   aumentarAtributo,
   atualizarBonus,
   rolarAtributo,
-  rolarHabilidade
+  rolarHabilidade,
+  editarAtributo,
+  atualizarImagem,
+  readonly: false
 };

@@ -60,6 +60,7 @@ async function equipar(req, res) {
   res.json({ ok: true });
 }
 
+
 // Usar item (genérico, para itens não armas)
 async function usarItem(req, res) {
   const { id_personagem, id_item_personagem } = req.params;
@@ -67,14 +68,26 @@ async function usarItem(req, res) {
   if (!personagem) return res.status(403).json({ erro: "Acesso negado" });
   const item = await InventarioModel.obterItemPersonagem(id_item_personagem, id_personagem);
   if (!item) return res.status(404).json({ erro: "Item não encontrado" });
+  
+  let removido = false;
   if (item.tipo === 'anomalo') {
     let usos = item.usos_restantes;
     if (usos === null || usos === undefined) usos = item.usos_maximos;
     if (usos <= 0) return res.status(400).json({ erro: "Sem usos restantes" });
-    await InventarioModel.atualizarUsos(id_item_personagem, usos - 1);
+    const novosUsos = usos - 1;
+    if (novosUsos === 0) {
+      // Remove o item do inventário
+      await InventarioModel.removerItem(id_item_personagem, id_personagem);
+      removido = true;
+    } else {
+      await InventarioModel.atualizarUsos(id_item_personagem, novosUsos);
+    }
+  } else {
+    // Para itens não anômalos, apenas aplica efeito se houver (ex: cura, dano, etc.)
+    // Você pode expandir aqui conforme necessidade
   }
   // Aqui você pode implementar efeitos específicos (curar, dar dano, etc.)
-  res.json({ ok: true, mensagem: `${item.nome} utilizado.` });
+  res.json({ ok: true, mensagem: `${item.nome} utilizado.`, removido });
 }
 
 // Atacar com arma
@@ -185,7 +198,43 @@ async function listarModificacoesDoItem(req, res) {
   const mods = await InventarioModel.listarModificacoesItem(id_item_personagem);
   res.json(mods);
 }
+async function criarItemPersonalizado(req, res) {
+  try {
+    const { id_personagem } = req.params;
+    const { nome, tipo, descricao, dano, atributo_ataque, margem_critico, multiplicador_critico, bonus_ataque, bonus_ca, usos_maximos } = req.body;
 
+    // Validações simples
+    if (!nome || !tipo) return res.status(400).json({ erro: "Nome e tipo são obrigatórios" });
+
+    // 1. Salva na biblioteca pessoal do jogador
+    const idItemBiblioteca = await ItemModel.criarItemBiblioteca({
+      nome,
+      tipo,
+      descricao,
+      dano,
+      atributo_ataque: atributo_ataque || 'forca',
+      margem_critico: margem_critico || 20,
+      multiplicador_critico: multiplicador_critico || 2,
+      bonus_ataque: bonus_ataque || 0,
+      bonus_ca: bonus_ca || 0,
+      usos_maximos: usos_maximos || null,
+      is_geral: 0,
+      id_jogador: req.session.userId
+    });
+
+    // 2. Adiciona ao inventário do personagem
+    const idItemInventario = await InventarioModel.adicionarItem(id_personagem, idItemBiblioteca, nome);
+    
+    res.json({
+      ok: true,
+      id_item_personagem: idItemInventario,
+      mensagem: "Item criado e adicionado ao inventário!"
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ erro: "Erro ao criar item" });
+  }
+}
 module.exports = {
   listar,
   adicionar,
@@ -197,5 +246,6 @@ module.exports = {
   listarModificacoesDisponiveis,
   aplicarModificacao,
   removerModificacao,
-  listarModificacoesDoItem
+  listarModificacoesDoItem,
+  criarItemPersonalizado
 };

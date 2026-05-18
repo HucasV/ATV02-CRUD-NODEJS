@@ -243,6 +243,23 @@ CREATE TABLE IF NOT EXISTS modificacoes_biblioteca (
     id_jogador INT NULL,
     FOREIGN KEY (id_jogador) REFERENCES jogador(id) ON DELETE CASCADE
 );
+-- --------------------------------------------------
+-- Tabela: Logs do campanha
+-- --------------------------------------------------
+CREATE TABLE IF NOT EXISTS campanha_logs (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  id_campanha INT NOT NULL,
+  id_jogador INT NOT NULL,
+  id_personagem INT NOT NULL,
+  acao VARCHAR(50) NOT NULL,           -- 'atributo', 'habilidade', 'ataque'
+  nome_acao VARCHAR(255),               -- nome do atributo, habilidade ou arma
+  detalhes TEXT,                        -- descrição completa da rolagem
+  resultado INT DEFAULT NULL,           -- valor total (opcional)
+  data_hora TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (id_campanha) REFERENCES campanhas(id) ON DELETE CASCADE,
+  FOREIGN KEY (id_jogador) REFERENCES jogador(id) ON DELETE CASCADE,
+  FOREIGN KEY (id_personagem) REFERENCES personagens(id) ON DELETE CASCADE
+);
 
 -- --------------------------------------------------
 -- DADOS INICIAIS: Habilidades das Divindades

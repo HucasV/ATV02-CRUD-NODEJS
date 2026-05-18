@@ -14,5 +14,6 @@ router.get("/itens/biblioteca", verificarLogin, inventarioController.listarBibli
 router.get("/modificacoes", verificarLogin, inventarioController.listarModificacoesDisponiveis);
 router.post("/inventario/item/modificacao", verificarLogin, inventarioController.aplicarModificacao);
 router.delete("/inventario/item/modificacao", verificarLogin, inventarioController.removerModificacao);
+router.post("/personagens/:id_personagem/itens/criar", verificarLogin, inventarioController.criarItemPersonalizado);
 
 module.exports = router;

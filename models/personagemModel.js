@@ -69,6 +69,9 @@ async function updateBonus(id, bonusArmadura, bonusOutros) {
   return { ca };
 }
 
+async function findById(id) {
+  const [rows] = await db.query("SELECT * FROM personagens WHERE id = ?", [id]);
+  return rows[0];
+}
 
-
-module.exports = { findByIdAndJogador, findAllByJogador, create, update, deleteById, getBonus, updateCA, updateBonus, };
+module.exports = { findByIdAndJogador, findAllByJogador, create, update, deleteById, getBonus, updateCA, updateBonus, findById};

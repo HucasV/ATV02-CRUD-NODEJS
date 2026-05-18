@@ -70,7 +70,17 @@ async function listarModificacoesItem(id_item_personagem) {
   );
   return rows;
 }
-
+// models/itemModel.js
+async function criarItemBiblioteca(data) {
+  const { nome, tipo, descricao, dano, atributo_ataque, margem_critico, multiplicador_critico, bonus_ataque, bonus_ca, usos_maximos, is_geral, id_jogador } = data;
+  const [result] = await db.query(
+    `INSERT INTO itens_biblioteca 
+    (nome, tipo, descricao, dano, atributo_ataque, margem_critico, multiplicador_critico, bonus_ataque, bonus_ca, usos_maximos, is_geral, id_jogador)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [nome, tipo, descricao, dano, atributo_ataque, margem_critico, multiplicador_critico, bonus_ataque, bonus_ca, usos_maximos, is_geral, id_jogador]
+  );
+  return result.insertId;
+}
 module.exports = {
   listarPorPersonagem,
   adicionarItem,
@@ -80,5 +90,6 @@ module.exports = {
   obterItemPersonagem,
   adicionarModificacaoItem,
   removerModificacaoItem,
-  listarModificacoesItem
+  listarModificacoesItem,
+  criarItemBiblioteca
 };

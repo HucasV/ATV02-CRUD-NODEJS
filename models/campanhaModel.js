@@ -43,7 +43,7 @@ async function getJogadoresDaCampanha(id_campanha) {
 
 async function getPersonagensAtribuidos(id_campanha, id_jogador) {
   const [rows] = await db.query(`
-    SELECT p.id, p.nome, p.nivel
+    SELECT p.id, p.nome, p.nivel, p.imagem
     FROM campanha_personagens cp
     JOIN personagens p ON cp.id_personagem = p.id
     WHERE cp.id_campanha = ? AND cp.id_jogador = ?
@@ -81,6 +81,14 @@ async function deleteCampanha(id_campanha) {
   await db.query("DELETE FROM campanhas WHERE id = ?", [id_campanha]);
 }
 
+async function getCampanhaAtivaDoPersonagem(id_personagem) {
+  const [rows] = await db.query(
+    `SELECT id_campanha FROM campanha_personagens WHERE id_personagem = ? LIMIT 1`,
+    [id_personagem]
+  );
+  return rows[0]?.id_campanha || null;
+}
+
 module.exports = {
   findById,
   findAllByMestre,
@@ -92,5 +100,6 @@ module.exports = {
   atribuirPersonagem,
   removerPersonagem,
   getCampanhasByJogador,
-  deleteCampanha
+  deleteCampanha,
+  getCampanhaAtivaDoPersonagem
 };

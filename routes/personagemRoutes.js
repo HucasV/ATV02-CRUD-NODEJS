@@ -18,9 +18,10 @@ router.post("/personagens/:id/danoSanidadeJson", verificarLogin, personagemContr
 router.post("/personagens/:id/curaSanidadeJson", verificarLogin, personagemController.curaSanidadeJson);
 router.post("/personagens/:id/editarVidaJson", verificarLogin, personagemController.editarVidaJson);
 router.post("/personagens/:id/editarSanidadeJson", verificarLogin, personagemController.editarSanidadeJson);
+router.post("/personagens/:id/atributo/:atributo/editar", verificarLogin, personagemController.editarAtributo);
 router.post("/personagens/:id/atributo/:tipo/:operacao", verificarLogin, personagemController.aumentarAtributo);
 router.post("/personagens/:id/atualizarBonus", verificarLogin, personagemController.atualizarBonus);
 router.post("/personagens/:id/rolar-atributo/:atributo", verificarLogin, personagemController.rolarAtributo);
 router.post("/personagens/:id/habilidade/:idHabilidade/rolar", verificarLogin, personagemController.rolarHabilidade);
-
+router.post("/personagens/:id/imagem", verificarLogin, upload.single("imagem"), personagemController.atualizarImagem);
 module.exports = router;

@@ -20,4 +20,6 @@ router.get("/solicitacoes", verificarLogin, campanhaController.listarSolicitacoe
 router.post("/solicitacoes/:id/aceitar", verificarLogin, campanhaController.aceitarSolicitacao);
 router.post("/solicitacoes/:id/recusar", verificarLogin, campanhaController.recusarSolicitacao);
 router.get("/jogadores/buscar", verificarLogin, campanhaController.buscarJogadores);
+router.get("/campanhas/:id_campanha/personagens/:id_personagem/visualizar", verificarLogin, campanhaController.visualizarPersonagem);
+router.get("/campanhas/:id/logs", verificarLogin, campanhaController.verLogs);
 module.exports = router;

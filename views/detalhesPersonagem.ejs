@@ -6,9 +6,16 @@
   <h2><%= personagem.nome %></h2>
 
   <div class="topo">
-    <% if (personagem.imagem) { %>
-      <img src="/uploads/<%= personagem.imagem %>" class="img-ficha">
-    <% } %>
+    <div class="imagem-container" style="position: relative; cursor: pointer;">
+  <% if (personagem.imagem) { %>
+    <img src="/uploads/<%= personagem.imagem %>" class="img-ficha" id="personagemImagem">
+  <% } else { %>
+    <img src="/img/personagem-padrao.png" class="img-ficha" id="personagemImagem">
+  <% } %>
+  <div class="overlay-editar" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; opacity: 0; transition: 0.2s; border-radius: 10px;">
+    <span style="color: #00ff9c;">✏️ Trocar foto</span>
+  </div>
+</div>
 
     <div class="info">
       <p><strong>Nível:</strong> <%= personagem.nivel %></p>
@@ -75,7 +82,15 @@
       </div>
     </div>
   </div> 
-
+<% const isReadOnly = typeof readonly !== 'undefined' && readonly; %>
+<% if (isReadOnly) { %>
+  <!-- botões de aumentar/diminuir atributo -->
+  <button class="btn-atributo btn-seta" ...>+</button>
+  <button class="btn-atributo btn-seta" ...>-</button>
+  <!-- botões de editar vida/sanidade, deletar personagem, etc. -->
+<% } else { %>
+  <span style="opacity:0.5;">(somente leitura)</span>
+<% } %>
   <hr>
 
   <!-- ATRIBUTOS -->
@@ -84,7 +99,7 @@
   <div class="atributos-grid">
     <div class="attr" data-atributo="forca">
       <div class="attr-nome">FOR</div>
-      <div class="attr-valor"><%= personagem.forca %></div>
+      <div class="attr-valor attr-valor-editable" data-atributo="forca" data-valor-atual="<%= personagem.forca %>"><%= personagem.forca %></div>
       <div class="attr-buttons">
         <button type="button" class="btn-atributo btn-seta btn-roll-atributo" data-atributo="forca" title="Rolar 1d20 + Força">🎲</button>
         <button type="button" class="btn-atributo btn-seta" data-atributo="forca" data-op="aumentar" <%= pontos_disponiveis_atributo <= 0 ? 'disabled' : '' %>>+</button>
@@ -93,7 +108,7 @@
     </div>
     <div class="attr" data-atributo="agilidade">
       <div class="attr-nome">AGI</div>
-      <div class="attr-valor"><%= personagem.agilidade %></div>
+      <div class="attr-valor attr-valor-editable" data-atributo="agilidade" data-valor-atual="<%= personagem.agilidade %>"><%= personagem.agilidade %></div>
       <div class="attr-buttons">
         <button type="button" class="btn-atributo btn-seta btn-roll-atributo" data-atributo="agilidade" title="Rolar 1d20 + Agilidade">🎲</button>
         <button type="button" class="btn-atributo btn-seta" data-atributo="agilidade" data-op="aumentar" <%= pontos_disponiveis_atributo <= 0 ? 'disabled' : '' %>>+</button>
@@ -102,7 +117,7 @@
     </div>
     <div class="attr" data-atributo="constituicao">
       <div class="attr-nome">CON</div>
-      <div class="attr-valor"><%= personagem.constituicao %></div>
+      <div class="attr-valor attr-valor-editable" data-atributo="constituicao"data-valor-atual="<%= personagem.constituicao %>"><%= personagem.constituicao %></div>
       <div class="attr-buttons">
         <button type="button" class="btn-atributo btn-seta btn-roll-atributo" data-atributo="constituicao" title="Rolar 1d20 + Constituição">🎲</button>
         <button type="button" class="btn-atributo btn-seta" data-atributo="constituicao" data-op="aumentar" <%= pontos_disponiveis_atributo <= 0 ? 'disabled' : '' %>>+</button>
@@ -111,7 +126,7 @@
     </div>
     <div class="attr" data-atributo="intelecto">
       <div class="attr-nome">INT</div>
-      <div class="attr-valor"><%= personagem.intelecto %></div>
+      <div class="attr-valor attr-valor-editable" data-atributo="intelecto" data-valor-atual="<%= personagem.intelecto %>"><%= personagem.intelecto %></div>
       <div class="attr-buttons">
         <button type="button" class="btn-atributo btn-seta btn-roll-atributo" data-atributo="intelecto" title="Rolar 1d20 + Intelecto">🎲</button>
         <button type="button" class="btn-atributo btn-seta" data-atributo="intelecto" data-op="aumentar" <%= pontos_disponiveis_atributo <= 0 ? 'disabled' : '' %>>+</button>
@@ -120,7 +135,7 @@
     </div>
     <div class="attr" data-atributo="atencao">
       <div class="attr-nome">ATE</div>
-      <div class="attr-valor"><%= personagem.atencao %></div>
+      <div class="attr-valor attr-valor-editable" data-atributo="atencao" data-valor-atual="<%= personagem.atencao %>"><%= personagem.atencao %></div>
       <div class="attr-buttons">
         <button type="button" class="btn-atributo btn-seta btn-roll-atributo" data-atributo="atencao" title="Rolar 1d20 + Atenção">🎲</button>
         <button type="button" class="btn-atributo btn-seta" data-atributo="atencao" data-op="aumentar" <%= pontos_disponiveis_atributo <= 0 ? 'disabled' : '' %>>+</button>
@@ -129,7 +144,7 @@
     </div>
     <div class="attr" data-atributo="estabilidade">
       <div class="attr-nome">EST</div>
-      <div class="attr-valor"><%= personagem.estabilidade %></div>
+      <div class="attr-valor attr-valor-editable" data-atributo="estabilidade" data-valor-atual="<%= personagem.estabilidade %>"><%= personagem.estabilidade %></div>
       <div class="attr-buttons">
         <button type="button" class="btn-atributo btn-seta btn-roll-atributo" data-atributo="estabilidade" title="Rolar 1d20 + Estabilidade">🎲</button>
         <button type="button" class="btn-atributo btn-seta" data-atributo="estabilidade" data-op="aumentar" <%= pontos_disponiveis_atributo <= 0 ? 'disabled' : '' %>>+</button>
@@ -219,7 +234,7 @@
     <!-- INVENTÁRIO -->
     <div class="npc-container">
       <h2 class="npc-nome">Inventário</h2>
-      <button type="button" id="btnAdicionarItem" class="btn-seta">+ Novo Item</button>
+      <button type="button" id="btnAdicionarItem" class="btn-seta">+ Novo Item</button> <button type="button" id="btnCriarItem" class="btn-seta">+ Criar Item</button>
       <div id="listaInventario" class="inventario-grid">
         <!-- itens serão carregados via JS -->
       </div>
@@ -276,7 +291,61 @@
   <button id="btnFecharModalMods" class="btn-seta">Fechar</button>
 </div>
 
+<!-- MODAL PARA CRIAR ITEM PERSONALIZADO -->
+<div id="modalCriarItem" style="display:none; position:fixed; top:10%; left:30%; background:#0f0f0f; border:1px solid #00ff9c; padding:20px; z-index:1000; width:450px; max-height:80vh; overflow-y:auto;">
+  <h3>Criar Novo Item</h3>
+  <form id="formCriarItem">
+    <label>Nome *</label>
+    <input type="text" id="novoItemNome" required>
+    
+    <label>Tipo *</label>
+    <select id="novoItemTipo">
+      <option value="arma">Arma</option>
+      <option value="protecao">Proteção</option>
+      <option value="geral">Geral</option>
+      <option value="anomalo">Anômalo</option>
+    </select>
+    
+    <label>Descrição</label>
+    <textarea id="novoItemDescricao" rows="3"></textarea>
+    
+    <div id="camposArma" style="display:none;">
+      <label>Dano (ex: 2d6)</label>
+      <input type="text" id="novoItemDano" placeholder="2d6">
+      
+      <label>Atributo de acerto</label>
+      <select id="novoItemAtributoAtaque">
+        <option value="forca">Força</option>
+        <option value="agilidade">Agilidade</option>
+      </select>
+      
+      <label>Margem de crítico (ex: 20)</label>
+      <input type="number" id="novoItemMargemCritico" value="20">
+      
+      <label>Multiplicador crítico</label>
+      <input type="number" id="novoItemMultiCritico" value="2">
+      
+      <label>Bônus de acerto</label>
+      <input type="number" id="novoItemBonusAtaque" value="0">
+    </div>
+    
+    <div id="camposProtecao" style="display:none;">
+      <label>Bônus de CA</label>
+      <input type="number" id="novoItemBonusCA" value="0">
+    </div>
+    
+    <div id="camposAnomalo" style="display:none;">
+      <label>Usos máximos</label>
+      <input type="number" id="novoItemUsos" value="1">
+    </div>
+    
+    <button type="submit" class="btn-seta">Criar e Adicionar</button>
+    <button type="button" id="btnFecharCriarItem" class="btn-seta">Cancelar</button>
+  </form>
+</div>
+
 <script>
+  
 document.addEventListener('DOMContentLoaded', function() {
   console.log('DOM carregado - script inicializado');
 
@@ -1309,5 +1378,186 @@ window.showRollResult = function(data) {
   // Inicializar
   atualizarCA();
   carregarInventario();
+
+
+// ======================
+// EDITOR DE ATRIBUTOS (MANUAL)
+// ======================
+function criarEditorAtributo(span) {
+  span.addEventListener('click', function editar(e) {
+    e.stopPropagation();
+    if (span.querySelector('input')) return;
+
+    const atributo = span.getAttribute('data-atributo');
+    const valorAtual = parseInt(span.innerText);
+    const idPersonagem = <%= personagem.id %>;
+
+    const input = document.createElement('input');
+    input.type = 'number';
+    input.value = valorAtual;
+    input.min = 1;
+    input.max = 99;
+    input.classList.add('editar-atributo-input');
+
+    span.innerHTML = '';
+    span.appendChild(input);
+    input.focus();
+
+    function finalizar() {
+      let novoValor = parseInt(input.value);
+      if (isNaN(novoValor)) novoValor = 1;
+      if (novoValor < 1) novoValor = 1;
+
+      fetch(`/personagens/${idPersonagem}/atributo/${atributo}/editar`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ novo_valor: novoValor })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.ok) {
+          span.innerText = data.novo_valor;
+          // Atualiza pontos de atributo disponíveis
+          const pontosSpan = document.getElementById('pontos-atributo-disponiveis');
+          if (pontosSpan) pontosSpan.innerText = data.pontos_disponiveis;
+          // Atualiza vida e sanidade se tiverem mudado
+          if (data.vida_atual !== undefined || data.vida_max !== undefined ||
+              data.sanidade_atual !== undefined || data.sanidade_max !== undefined) {
+            atualizarInterface({
+              vida_atual: data.vida_atual,
+              vida_max: data.vida_max,
+              sanidade_atual: data.sanidade_atual,
+              sanidade_max: data.sanidade_max
+            });
+          }
+        } else {
+          alert(data.erro || 'Erro ao alterar atributo');
+          span.innerText = valorAtual;
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        alert('Erro de conexão');
+        span.innerText = valorAtual;
+      });
+    }
+
+    input.addEventListener('blur', finalizar);
+    input.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') finalizar();
+    });
+  });
+}
+// Inicializar editores manuais de atributos
+document.querySelectorAll('.attr-valor-editable').forEach(span => {
+  criarEditorAtributo(span);
+});
+
+
+  document.querySelectorAll('.attr-valor-editable').forEach(span => {
+    criarEditorAtributo(span);
+  });
+
+// Mostrar modal de criação
+document.getElementById('btnCriarItem')?.addEventListener('click', () => {
+  document.getElementById('modalCriarItem').style.display = 'block';
+});
+
+// Fechar modal
+document.getElementById('btnFecharCriarItem')?.addEventListener('click', () => {
+  document.getElementById('modalCriarItem').style.display = 'none';
+});
+
+// Mostrar/esconder campos específicos do tipo
+const tipoSelect = document.getElementById('novoItemTipo');
+const camposArma = document.getElementById('camposArma');
+const camposProtecao = document.getElementById('camposProtecao');
+const camposAnomalo = document.getElementById('camposAnomalo');
+
+function atualizarCampos() {
+  const tipo = tipoSelect.value;
+  camposArma.style.display = tipo === 'arma' ? 'block' : 'none';
+  camposProtecao.style.display = tipo === 'protecao' ? 'block' : 'none';
+  camposAnomalo.style.display = tipo === 'anomalo' ? 'block' : 'none';
+}
+tipoSelect.addEventListener('change', atualizarCampos);
+atualizarCampos();
+
+// Envio do formulário
+document.getElementById('formCriarItem')?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const tipo = document.getElementById('novoItemTipo').value;
+  const dados = {
+    nome: document.getElementById('novoItemNome').value,
+    tipo: tipo,
+    descricao: document.getElementById('novoItemDescricao').value,
+    dano: tipo === 'arma' ? document.getElementById('novoItemDano').value : null,
+    atributo_ataque: tipo === 'arma' ? document.getElementById('novoItemAtributoAtaque').value : 'forca',
+    margem_critico: tipo === 'arma' ? parseInt(document.getElementById('novoItemMargemCritico').value) : 20,
+    multiplicador_critico: tipo === 'arma' ? parseInt(document.getElementById('novoItemMultiCritico').value) : 2,
+    bonus_ataque: tipo === 'arma' ? parseInt(document.getElementById('novoItemBonusAtaque').value) : 0,
+    bonus_ca: tipo === 'protecao' ? parseInt(document.getElementById('novoItemBonusCA').value) : 0,
+    usos_maximos: tipo === 'anomalo' ? parseInt(document.getElementById('novoItemUsos').value) : null
+  };
+  try {
+    const response = await fetch(`/personagens/${idPersonagem}/itens/criar`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(dados)
+    });
+    const data = await response.json();
+    if (response.ok && data.ok) {
+      alert('Item criado e adicionado ao inventário!');
+      document.getElementById('modalCriarItem').style.display = 'none';
+      carregarInventario(); // recarrega a lista
+    } else {
+      alert(data.erro || 'Erro ao criar item');
+    }
+  } catch (err) {
+    console.error(err);
+    alert('Erro de conexão');
+  }
+});
+// ======================
+// TROCAR FOTO DO PERSONAGEM
+// ======================
+const imgContainer = document.querySelector('.imagem-container');
+if (imgContainer) {
+  imgContainer.addEventListener('click', () => {
+    // Cria input file oculto
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      
+      const formData = new FormData();
+      formData.append('imagem', file);
+      
+      try {
+        const response = await fetch(`/personagens/${idPersonagem}/imagem`, {
+          method: 'POST',
+          body: formData
+        });
+        const data = await response.json();
+        if (response.ok && data.ok) {
+          // Atualiza a imagem na tela
+          const imgElement = document.getElementById('personagemImagem');
+          imgElement.src = `/uploads/${data.imagem}?t=${new Date().getTime()}`;
+          // Opcional: mensagem de sucesso
+          console.log('Imagem atualizada com sucesso');
+        } else {
+          alert(data.erro || 'Erro ao atualizar imagem');
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Erro de conexão');
+      }
+    };
+    input.click();
+  });
+}
+
 });
 </script>
